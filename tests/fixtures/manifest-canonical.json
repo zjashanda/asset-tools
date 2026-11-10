@@ -1,0 +1,33 @@
+{
+  "schema": "ark.asset-manifest.v1",
+  "generated_at": "2026-11-10 12:00:00",
+  "assets": [
+    {
+      "id": "fixture-firmware",
+      "kind": "firmware",
+      "name": "Fixture 固件",
+      "version": "1.0.0",
+      "filename": "sample-firmware.txt",
+      "bytes": 32,
+      "sha256": "31db6ed2da6b79a78d355a24c619254ea70a01f87d6ce40cd38773639cf60744",
+      "project": "fixture-project",
+      "sources": [
+        {
+          "type": "local",
+          "path": "tests/fixtures/sample-firmware.txt",
+          "priority": 5
+        }
+      ],
+      "install": {
+        "cache_rel": "sha256/31/db/31db6ed2da6b79a78d355a24c619254ea70a01f87d6ce40cd38773639cf60744/sample-firmware.txt",
+        "material_rel": "fixture/sample-firmware.txt"
+      },
+      "provenance": {
+        "origin": "local",
+        "note": "fixture only",
+        "discovered_at": "2026-11-10 11:00:00"
+      },
+      "status": "verified"
+    }
+  ]
+}

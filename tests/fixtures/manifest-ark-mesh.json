@@ -1,0 +1,17 @@
+{
+  "schema": "ark-artifact-manifest.v1",
+  "updated_at": "2026-11-10 12:00:00",
+  "artifacts": [
+    {
+      "name": "fixture-tool",
+      "project": "fixture-project",
+      "version": "1.0.0",
+      "source_node": "storage-example",
+      "source_path": "/srv/storage/ark/artifacts/fixture/sample-tool.txt",
+      "destination": "fixture/sample-tool.txt",
+      "bytes": 28,
+      "sha256": "fb525202a765229f366463d1c6154ba54e9fc0a34de18f40e258efae65ec5c62",
+      "fetched_at": "2026-11-10 11:30:00"
+    }
+  ]
+}

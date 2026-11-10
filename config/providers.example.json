@@ -1,0 +1,35 @@
+{
+  "schema": "ark.providers.v1",
+  "note": "示例配置：只演示结构。凭据一律由环境变量提供，切勿写进本文件；内网地址与主机名均为示例，需按环境覆盖。",
+  "cache": {
+    "root": "~/.cache/ark-assets"
+  },
+  "adapters": {
+    "local": {
+      "allowed_roots": [],
+      "priority": 5
+    },
+    "http": {
+      "timeout": 30
+    },
+    "oss": {
+      "credential_mode": "env-only",
+      "endpoint_env": "ARK_OSS_ENDPOINT",
+      "bucket_env": "ARK_OSS_BUCKET",
+      "cli": ""
+    },
+    "node-storage": {
+      "host": "storage1006",
+      "user": "administrator",
+      "port": 10027,
+      "base_dir": "/srv/storage/ark/artifacts",
+      "endpoint_example": "10.11.63.24:10027（示例，需按环境覆盖）"
+    },
+    "email": {
+      "cli": "qw-email-handle"
+    },
+    "nas": {
+      "cli": "fileball"
+    }
+  }
+}

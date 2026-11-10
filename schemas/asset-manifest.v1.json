@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ark.example/schemas/asset-manifest.v1.json",
+  "title": "ark.asset-manifest.v1",
+  "description": "方舟资产清单（canonical）。字段只增不减；校验时允许额外键。",
+  "type": "object",
+  "required": ["schema", "assets"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "ark.asset-manifest.v1"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "北京时间展示格式 YYYY-MM-DD HH:MM:SS"
+    },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/asset" }
+    }
+  },
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "enum": ["local", "http", "oss", "node-storage", "email", "nas"]
+        },
+        "priority": {
+          "type": "integer",
+          "description": "越小越先，缺省 100"
+        },
+        "path": { "type": "string" },
+        "url": { "type": "string" },
+        "key": { "type": "string" },
+        "node": { "type": "string" },
+        "id": { "type": "string" }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "required": ["id", "kind", "filename", "sha256"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["firmware", "tool", "test_material", "dataset", "other"]
+        },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "filename": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/definitions/sha256" },
+        "project": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/source" }
+        },
+        "install": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "cache_rel": {
+              "type": "string",
+              "pattern": "^sha256/[a-f0-9]{2}/[a-f0-9]{2}/[a-f0-9]{64}/.+$",
+              "description": "必须等于内容寻址相对路径 sha256/<前2>/<次2>/<sha256>/<filename>"
+            },
+            "material_rel": { "type": "string" }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "origin": { "type": "string" },
+            "note": { "type": "string" },
+            "discovered_at": { "type": "string" }
+          }
+        },
+        "status": {
+          "enum": ["verified", "unverified", "missing"]
+        }
+      }
+    }
+  }
+}

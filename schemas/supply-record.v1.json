@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ark.example/schemas/supply-record.v1.json",
+  "title": "ark.supply-record.v1",
+  "description": "供应记录：证明某个 sha256 的资产被落到某个目标路径。本仓不产出归档 receipt。",
+  "type": "object",
+  "required": [
+    "schema",
+    "asset_id",
+    "filename",
+    "sha256",
+    "dest_path",
+    "dest_sha256",
+    "dest_sha256_verified",
+    "supplied_at",
+    "archive_owner",
+    "is_receipt"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "const": "ark.supply-record.v1" },
+    "asset_id": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "filename": { "type": "string", "minLength": 1 },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "source_type": {
+      "enum": ["", "cache", "local", "http", "oss", "node-storage", "email", "nas"]
+    },
+    "source_ref": { "type": "string" },
+    "dest_path": { "type": "string", "minLength": 1 },
+    "dest_sha256": { "type": "string" },
+    "dest_sha256_verified": { "type": "boolean" },
+    "supplied_at": {
+      "type": "string",
+      "description": "北京时间展示格式 YYYY-MM-DD HH:MM:SS"
+    },
+    "node": { "type": "string" },
+    "archive_owner": { "const": "ark-archive" },
+    "is_receipt": { "const": false }
+  }
+}

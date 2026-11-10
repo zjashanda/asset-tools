@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asset-tools"
+version = "0.1.0"
+description = "Ark asset supply layer: discover, manifest, verify, content-addressed cache, supply"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Ark" }]
+keywords = ["ark", "assets", "manifest", "sha256", "cache"]
+dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
+]
+
+[project.scripts]
+asset-tools = "asset_tools.cli:main"
+
+[tool.setuptools]
+packages = ["asset_tools", "asset_tools.adapters"]
+
+[tool.setuptools.package-data]
+asset_tools = ["../VERSION"]

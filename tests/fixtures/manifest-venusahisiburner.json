@@ -1,0 +1,26 @@
+{
+  "schema": "venusahisiburner-assets/v1",
+  "description": "fixture only",
+  "assets": [
+    {
+      "id": "fixture-oss-tool",
+      "kind": "tool",
+      "target_chip": "EXAMPLE/CHIP",
+      "version": "1.0.0",
+      "file": "sample-tool.txt",
+      "bytes": 28,
+      "sha256": "fb525202a765229f366463d1c6154ba54e9fc0a34de18f40e258efae65ec5c62",
+      "oss": {
+        "key": "fixture/sample-tool.txt"
+      },
+      "install": {
+        "material_rel": "tools/sample-tool.txt",
+        "cache_rel": "tools/fixture/sample-tool.txt"
+      },
+      "provenance": {
+        "source": "fixture",
+        "note": "fixture only"
+      }
+    }
+  ]
+}
