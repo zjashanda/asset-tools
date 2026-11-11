@@ -241,6 +241,7 @@ unset ARK_OSS_ACCESS_KEY_SECRET
 | [docs/security.md](docs/security.md) | 凭据清单（仅变量名）、`util.redact()`、`secret_scan.py` 五条规则与门禁 |
 | [docs/rollback.md](docs/rollback.md) | 清缓存、回退 manifest、关闭适配器、删供应记录 |
 | [docs/runbook.md](docs/runbook.md) | 日常巡检、取件失败排查、凭据缺失排查 |
+| [docs/assets-not-in-git.md](docs/assets-not-in-git.md) | 不进 Git 的资产清单（pudCorntrol RAR 的路径/大小/SHA-256、厂商二进制与手册规则、NOAH-58 冻结仓库） |
 | [MIGRATION.md](MIGRATION.md) | 从 `artifact-manifest.json` 与 `venusahisiburner` 清单迁移 |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更记录 |
 
