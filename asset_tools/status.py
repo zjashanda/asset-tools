@@ -74,6 +74,7 @@ def collect_status(
     manifest_path: Any = None,
     configs: Optional[Dict[str, Dict[str, Any]]] = None,
     config_path: Any = None,
+    legacy_rfc3339: bool = False,
 ) -> Dict[str, Any]:
     """汇总一次 status 快照。"""
     from . import __version__
@@ -82,14 +83,16 @@ def collect_status(
     target = manifest_path or default_manifest_path()
     statuses = probe_all(configs)
     now = util.now_beijing()
-    return {
+    payload = {
         "schema": STATUS_SCHEMA,
         "version": __version__,
         "generated_at": util.format_display(now),
-        "generated_at_rfc3339": util.format_rfc3339(now),
         "node": util.hostname(),
         "cache": cache_obj.stats(),
         "adapters": [status.to_dict() for status in statuses],
         "manifest": manifest_section(target),
         "config": config_section(config_path, configs),
     }
+    if legacy_rfc3339:
+        payload["generated_at_rfc3339"] = util.format_rfc3339(now)
+    return payload

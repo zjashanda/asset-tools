@@ -70,6 +70,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = subs.add_parser("status", help="适配器探测 + 缓存统计 + manifest 状态")
     _add_common(p, True)
     p.add_argument("--manifest", metavar="PATH", help="清单路径（默认 ~/.config/ark-assets/asset-manifest.json）")
+    p.add_argument(
+        "--legacy-rfc3339",
+        action="store_true",
+        help="[已废弃] 额外输出 generated_at_rfc3339（+0800），仅兼容旧消费方，默认不输出",
+    )
 
     p = subs.add_parser("plan", help="只读计划：缓存命中 / 需取件 / 来源顺序")
     _add_common(p, True)
@@ -261,6 +266,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         manifest_path=_manifest_path(args) if getattr(args, "manifest", None) else None,
         configs=_adapter_configs(config),
         config_path=config_path,
+        legacy_rfc3339=bool(getattr(args, "legacy_rfc3339", False)),
     )
     _emit(args, payload)
     rows = []

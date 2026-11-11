@@ -22,9 +22,9 @@ class TimeContractTest(unittest.TestCase):
         self.assertNotIn("T", text)
         self.assertNotIn("+08", text)
 
-    def test_format_rfc3339_shape(self):
+    def test_legacy_rfc3339_shape(self):
         text = util.format_rfc3339()
-        self.assertRegex(text, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+0800$")
+        self.assertRegex(text, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+0800$")  # time-lint:allow legacy opt-in
 
     def test_format_stamp_shape(self):
         self.assertRegex(util.format_stamp(), r"^\d{8}-\d{6}$")
@@ -32,7 +32,7 @@ class TimeContractTest(unittest.TestCase):
     def test_format_uses_given_datetime(self):
         moment = datetime(2026, 11, 10, 19, 30, 0, tzinfo=util.BEIJING)
         self.assertEqual(util.format_display(moment), "2026-11-10 19:30:00")
-        self.assertEqual(util.format_rfc3339(moment), "2026-11-10T19:30:00+0800")
+        self.assertEqual(util.format_rfc3339(moment), "2026-11-10T19:30:00+0800")  # time-lint:allow legacy opt-in
         self.assertEqual(util.format_stamp(moment), "20261110-193000")
 
     def test_display_time_roundtrip(self):
@@ -42,8 +42,8 @@ class TimeContractTest(unittest.TestCase):
         self.assertEqual(parsed.tzinfo.utcoffset(parsed), timedelta(hours=8))
 
     def test_parse_rfc3339_and_z(self):
-        first = util.parse_time("2026-11-10T11:30:00+0800")
-        second = util.parse_time("2026-11-10T03:30:00Z")
+        first = util.parse_time("2026-11-10T11:30:00+0800")  # time-lint:allow legacy input tolerance
+        second = util.parse_time("2026-11-10T03:30:00Z")  # time-lint:allow legacy input tolerance
         self.assertEqual(first, second)
         self.assertEqual(first.utcoffset(), timedelta(hours=8))
 

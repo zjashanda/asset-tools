@@ -33,7 +33,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 BEIJING = timezone(timedelta(hours=8))
 
 FMT_DISPLAY = "%Y-%m-%d %H:%M:%S"
-FMT_RFC3339 = "%Y-%m-%dT%H:%M:%S%z"
+# 已废弃：仅 --legacy-rfc3339 显式开关下用于兼容旧消费方，默认输出不得使用
+FMT_RFC3339 = "%Y-%m-%dT%H:%M:%S%z"  # time-lint:allow legacy opt-in only
 FMT_STAMP = "%Y%m%d-%H%M%S"
 
 # --------------------------------------------------------------------- 退出码
@@ -61,7 +62,7 @@ MIB = 1024 * 1024
 
 def now_beijing() -> datetime:
     """当前时间，固定按北京时间换算，不依赖节点本地时区。"""
-    return datetime.now(timezone.utc).astimezone(BEIJING)
+    return datetime.now(BEIJING)
 
 
 def _coerce(value: Optional[datetime]) -> datetime:
@@ -78,7 +79,7 @@ def format_display(dt: Optional[datetime] = None) -> str:
 
 
 def format_rfc3339(dt: Optional[datetime] = None) -> str:
-    """机器可读格式：``YYYY-MM-DDTHH:MM:SS+0800``。"""
+    """已废弃的机器可读格式，仅 --legacy-rfc3339 开关下使用，默认输出不得调用。"""
     return _coerce(dt).strftime(FMT_RFC3339)
 
 

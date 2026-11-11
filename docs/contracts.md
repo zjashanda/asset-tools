@@ -9,10 +9,11 @@
 | 用途 | 格式 | 示例 |
 |---|---|---|
 | 人读 / manifest / 供应记录 | `YYYY-MM-DD HH:MM:SS`（`FMT_DISPLAY`，无时区后缀） | `2026-11-10 19:30:00` |
-| 机器可读（需要带时区时） | `YYYY-MM-DDTHH:MM:SS+0800`（`FMT_RFC3339`） | `2026-11-10T19:30:00+0800` |
 | 文件名 / 隔离区前缀 | `YYYYMMDD-HHMMSS`（`FMT_STAMP`） | `20261110-193000` |
 
-时间只有一个来源：`util.now_beijing()`，实现是 `datetime.now(timezone.utc).astimezone(BEIJING)`。不读节点本地时区，因为节点跨时区和跨 `TZ` 设置时，本地时间无法排序与对齐。解析用 `util.parse_time()`，两种格式都接受，返回带时区的 `datetime`。
+默认输出只有上面两种格式，禁止 `T` 分隔、小数秒、`+08:00`、`Z` 与 RFC3339。旧消费方需要带时区的机器可读时间时，只能显式加 `--legacy-rfc3339` 让 `status` 额外输出 `generated_at_rfc3339`（`FMT_RFC3339`），该字段默认不出现，不得作为默认输出、不得写入 manifest 或供应记录。
+
+时间只有一个来源：`util.now_beijing()`，实现是 `datetime.now(BEIJING)`。不读节点本地时区，因为节点跨时区和跨 `TZ` 设置时，本地时间无法排序与对齐。解析用 `util.parse_time()`，历史格式仍可解析，返回带时区的 `datetime`；解析宽容不等于输出宽容。
 
 | 码 | 名称 | 触发 |
 |---|---|---|

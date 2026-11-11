@@ -64,6 +64,22 @@ class StatusCliTest(CliBase):
         self.assertIn("adapter", stdout)
         self.assertIn("local", stdout)
 
+    def test_status_default_has_no_rfc3339_field(self):
+        code, payload = call_json(self.args("status", "--json", "--manifest", self.manifest))
+        self.assertEqual(code, 0)
+        self.assertNotIn("generated_at_rfc3339", payload)
+        self.assertRegex(payload["generated_at"], r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+
+    def test_status_legacy_rfc3339_is_opt_in(self):
+        code, payload = call_json(
+            self.args("status", "--json", "--manifest", self.manifest, "--legacy-rfc3339")
+        )
+        self.assertEqual(code, 0)
+        self.assertRegex(
+            payload["generated_at_rfc3339"],
+            r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+0800$",  # time-lint:allow legacy opt-in
+        )
+
     def test_status_json_has_no_credentials(self):
         code, stdout = call(self.args("status", "--json", "--manifest", self.manifest))
         self.assertEqual(code, 0)
