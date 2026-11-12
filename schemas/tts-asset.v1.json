@@ -1,0 +1,250 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ark.example/schemas/tts-asset.v1.json",
+  "title": "ark.tts-asset.v1",
+  "description": "1006 TTS 共享音频库资产清单（canonical）。字段只增不减；校验时允许额外键。",
+  "type": "object",
+  "required": [
+    "schema",
+    "asset_id",
+    "cache_key",
+    "status",
+    "quality",
+    "shareable",
+    "sensitivity",
+    "scope",
+    "text",
+    "voice",
+    "engine",
+    "synthesis_params",
+    "output",
+    "normalization_profile",
+    "audio",
+    "provenance",
+    "supersedes",
+    "superseded_by",
+    "derived_from_asset_id",
+    "processing_chain",
+    "created_at"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "ark.tts-asset.v1"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^tts-[0-9a-f]{16}$"
+    },
+    "cache_key": {
+      "$ref": "#/definitions/sha256"
+    },
+    "status": {
+      "enum": ["active", "stale", "superseded"]
+    },
+    "quality": {
+      "enum": ["formal", "candidate", "evidence_gap"]
+    },
+    "shareable": {
+      "type": "boolean",
+      "description": "只有 true 且 sensitivity=none 才允许发布到共享库"
+    },
+    "sensitivity": {
+      "type": "string",
+      "description": "none 表示非敏感；其余值默认禁止发布"
+    },
+    "scope": {
+      "$ref": "#/definitions/scope"
+    },
+    "text": {
+      "$ref": "#/definitions/text"
+    },
+    "voice": {
+      "$ref": "#/definitions/voice"
+    },
+    "engine": {
+      "$ref": "#/definitions/engine"
+    },
+    "synthesis_params": {
+      "$ref": "#/definitions/synthesis_params"
+    },
+    "output": {
+      "$ref": "#/definitions/output"
+    },
+    "normalization_profile": {
+      "type": "string",
+      "description": "文本规范化档位名；无档位写 none"
+    },
+    "audio": {
+      "$ref": "#/definitions/audio"
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["generated_at", "node", "tool"],
+      "additionalProperties": true,
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "description": "北京时间展示格式 YYYY-MM-DD HH:MM:SS"
+        },
+        "node": { "type": "string" },
+        "tool": { "type": "string" },
+        "tool_version": { "type": "string" },
+        "tool_commit": { "type": "string" },
+        "license": { "type": "string" },
+        "source": { "type": "string" }
+      }
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "本版本取代的旧目录名；无则为 null"
+    },
+    "superseded_by": {
+      "type": ["string", "null"],
+      "description": "旧资产只读，不以原地改写表达；新版本目录发布时可在索引中体现"
+    },
+    "derived_from_asset_id": {
+      "type": ["string", "null"],
+      "description": "派生资产必须非空；派生资产默认不发布到共享库"
+    },
+    "processing_chain": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": {
+      "type": "string",
+      "description": "北京时间展示格式 YYYY-MM-DD HH:MM:SS"
+    }
+  },
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "number_or_null": {
+      "type": ["number", "null"]
+    },
+    "integer_or_null": {
+      "type": ["integer", "null"]
+    },
+    "string_or_null": {
+      "type": ["string", "null"]
+    },
+    "scope": {
+      "type": "object",
+      "required": ["visibility", "projects", "nodes"],
+      "additionalProperties": true,
+      "properties": {
+        "visibility": {
+          "enum": ["public", "project", "restricted"]
+        },
+        "projects": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "text": {
+      "type": "object",
+      "required": ["raw_sha256", "normalized", "language"],
+      "additionalProperties": true,
+      "properties": {
+        "raw_sha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "normalized": {
+          "type": "string",
+          "description": "规范化文本；敏感内容只存截断预览"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[A-Z]{2,8}(?:-[A-Z0-9]{1,8})*$"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "normalized_sha256": {
+          "$ref": "#/definitions/sha256"
+        }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "required": ["speaker", "voice_ref_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "speaker": {
+          "type": ["string", "null"],
+          "description": "音色名；不得是路径"
+        },
+        "voice_ref_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "oneOf": [
+        { "required": ["speaker"], "properties": { "speaker": { "type": "string" }, "voice_ref_sha256": { "type": "null" } } },
+        { "required": ["voice_ref_sha256"], "properties": { "speaker": { "type": "null" }, "voice_ref_sha256": { "type": "string" } } }
+      ]
+    },
+    "engine": {
+      "type": "object",
+      "required": ["engine", "model", "model_version"],
+      "additionalProperties": false,
+      "properties": {
+        "engine": { "type": "string" },
+        "model": { "type": ["string", "null"] },
+        "model_version": { "type": ["string", "null"] }
+      }
+    },
+    "synthesis_params": {
+      "type": "object",
+      "required": ["rate", "pitch", "style", "emotion", "speed"],
+      "additionalProperties": false,
+      "properties": {
+        "rate": { "$ref": "#/definitions/number_or_null" },
+        "pitch": { "$ref": "#/definitions/number_or_null" },
+        "style": { "$ref": "#/definitions/string_or_null" },
+        "emotion": { "$ref": "#/definitions/string_or_null" },
+        "speed": { "$ref": "#/definitions/number_or_null" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["container", "codec", "sample_rate", "channels", "bit_depth"],
+      "additionalProperties": false,
+      "properties": {
+        "container": { "$ref": "#/definitions/string_or_null" },
+        "codec": { "$ref": "#/definitions/string_or_null" },
+        "sample_rate": { "$ref": "#/definitions/integer_or_null" },
+        "channels": { "$ref": "#/definitions/integer_or_null" },
+        "bit_depth": { "$ref": "#/definitions/integer_or_null" }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": ["filename", "bytes", "sha256", "duration_seconds"],
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}\\.wav$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "duration_seconds": {
+          "type": ["number", "null"]
+        }
+      }
+    }
+  }
+}

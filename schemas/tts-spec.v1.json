@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ark.example/schemas/tts-spec.v1.json",
+  "title": "ark.tts-spec.v1",
+  "description": "TTS 合成规格（规范化视图）。缓存键只由本文件列出的字段决定；缺省参数显式写 null。",
+  "type": "object",
+  "required": ["schema", "language", "voice", "engine", "output"],
+  "oneOf": [
+    { "required": ["text"] },
+    { "required": ["normalized_text"] }
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "ark.tts-spec.v1"
+    },
+    "text": {
+      "description": "原始输入形状：字符串或 {raw, normalized, language} 对象",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "raw": { "type": "string" },
+            "normalized": { "type": "string" },
+            "language": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "normalized_text": {
+      "type": "string",
+      "description": "已规范化文本；键计算前仍会再走一次幂等规范化"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,8}(?:-[A-Z0-9]{1,8})*$",
+      "description": "大写语言码，例如 ZH / EN / ZH-CN"
+    },
+    "voice": {
+      "$ref": "#/definitions/voice"
+    },
+    "engine": {
+      "$ref": "#/definitions/engine"
+    },
+    "synthesis_params": {
+      "$ref": "#/definitions/synthesis_params"
+    },
+    "output": {
+      "$ref": "#/definitions/output"
+    },
+    "normalization_profile": {
+      "type": ["string", "null"],
+      "description": "文本规范化档位名；未声明按 none 处理"
+    }
+  },
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "number_or_null": {
+      "type": ["number", "null"]
+    },
+    "integer_or_null": {
+      "type": ["integer", "null"]
+    },
+    "string_or_null": {
+      "type": ["string", "null"]
+    },
+    "voice": {
+      "type": "object",
+      "required": ["speaker", "voice_ref_sha256"],
+      "additionalProperties": false,
+      "description": "speaker 与 voice_ref_sha256 只能二选一，另一项必须为 null",
+      "properties": {
+        "speaker": {
+          "type": ["string", "null"],
+          "description": "音色名；禁止写绝对路径"
+        },
+        "voice_ref_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "oneOf": [
+        { "properties": { "speaker": { "type": "string" }, "voice_ref_sha256": { "type": "null" } } },
+        { "properties": { "speaker": { "type": "null" }, "voice_ref_sha256": { "type": "string" } } }
+      ]
+    },
+    "engine": {
+      "type": "object",
+      "required": ["engine", "model", "model_version"],
+      "additionalProperties": false,
+      "properties": {
+        "engine": { "type": "string" },
+        "model": { "type": ["string", "null"] },
+        "model_version": { "type": ["string", "null"] }
+      }
+    },
+    "synthesis_params": {
+      "type": "object",
+      "required": ["rate", "pitch", "style", "emotion", "speed"],
+      "additionalProperties": false,
+      "properties": {
+        "rate": { "$ref": "#/definitions/number_or_null" },
+        "pitch": { "$ref": "#/definitions/number_or_null" },
+        "style": { "$ref": "#/definitions/string_or_null" },
+        "emotion": { "$ref": "#/definitions/string_or_null" },
+        "speed": { "$ref": "#/definitions/number_or_null" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["container", "codec", "sample_rate", "channels", "bit_depth"],
+      "additionalProperties": false,
+      "properties": {
+        "container": { "$ref": "#/definitions/string_or_null" },
+        "codec": { "$ref": "#/definitions/string_or_null" },
+        "sample_rate": { "$ref": "#/definitions/integer_or_null" },
+        "channels": { "$ref": "#/definitions/integer_or_null" },
+        "bit_depth": { "$ref": "#/definitions/integer_or_null" }
+      }
+    }
+  }
+}

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import __version__, util
+from . import tts_library
 from .adapters import ADAPTER_NAMES, get_adapter
 from .cache import ContentCache
 from .manifest import (
@@ -120,6 +121,59 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--manifest", metavar="PATH", required=True)
     p.add_argument("--asset", metavar="ID", required=True)
     p.add_argument("--dest", metavar="DIR", required=True, help="目标目录")
+
+    p = subs.add_parser(
+        "tts-library",
+        help="1006 TTS 共享音频库：key / lookup / fetch / publish / verify / index / status",
+    )
+    _add_common(p, True)
+    tts_subs = p.add_subparsers(dest="action", metavar="<action>")
+
+    def _tts_sub(name: str, text: str) -> argparse.ArgumentParser:
+        sub = tts_subs.add_parser(name, help=text)
+        _add_common(sub, True)
+        sub.add_argument(
+            "--root",
+            metavar="DIR",
+            default=None,
+            help="库根目录（默认 $ARK_TTS_LIBRARY 或 /srv/storage/ark/artifacts/audio/tts-library）",
+        )
+        return sub
+
+    sub = _tts_sub("key", "由合成规格计算 cache key / asset_id")
+    sub.add_argument("--spec", metavar="PATH", required=True, help="规格 JSON 文件")
+
+    sub = _tts_sub("lookup", "精确命中查询（候选只提示，不自动替代）")
+    sub.add_argument("--spec", metavar="PATH", required=True, help="规格 JSON 文件")
+    sub.add_argument("--project", metavar="NAME", default="", help="调用方项目（ACL）")
+    sub.add_argument("--node", metavar="NAME", default="", help="调用方节点（ACL）")
+    sub.add_argument("--allow-candidate", action="store_true", help="允许 candidate/evidence_gap")
+    sub.add_argument("--confirm", action="store_true", help="配合 --allow-candidate 显式确认")
+    sub.add_argument("--include-stale", action="store_true", help="仅人工核查 stale/superseded")
+
+    sub = _tts_sub("fetch", "校验后复制资产到任务目录（禁止硬链接）")
+    sub.add_argument("--asset", metavar="ID", default="", help="asset_id；可改用 --spec 计算")
+    sub.add_argument("--spec", metavar="PATH", default="", help="规格 JSON 文件（用于计算 asset_id）")
+    sub.add_argument("--dest", metavar="DIR", default="", help="目标目录")
+    sub.add_argument("--task-dir", metavar="DIR", default="", help="任务目录；缺省落 assets/tts/original/<asset_id>/")
+    sub.add_argument("--project", metavar="NAME", default="", help="调用方项目（ACL）")
+    sub.add_argument("--node", metavar="NAME", default="", help="调用方节点（ACL）")
+    sub.add_argument("--allow-candidate", action="store_true", help="允许 candidate/evidence_gap")
+    sub.add_argument("--confirm", action="store_true", help="配合 --allow-candidate 显式确认")
+
+    sub = _tts_sub("publish", "暂存目录发布到 1006（锁 / compare-and-create / query-back / outbox）")
+    sub.add_argument("--staging", metavar="DIR", required=True, help="暂存目录（manifest.json + 音频）")
+    sub.add_argument("--task-dir", metavar="DIR", default="", help="任务目录（outbox 与审计；必填）")
+    sub.add_argument("--project", metavar="NAME", default="", help="调用方项目（ACL）")
+    sub.add_argument("--node", metavar="NAME", default="", help="调用方节点（ACL）")
+    sub.add_argument("--allow-candidate", action="store_true", help="允许 quality=candidate 降级发布")
+    sub.add_argument("--lock-timeout", type=float, default=tts_library.DEFAULT_LOCK_TIMEOUT, metavar="SEC")
+
+    sub = _tts_sub("verify", "重新哈希库对象；损坏项移入 _quarantine")
+    sub.add_argument("--asset", metavar="ID", default="", help="只校验单个 asset_id")
+
+    _tts_sub("index", "重建 index.json（原子写、按 asset_id 稳定排序）")
+    _tts_sub("status", "库根可达性与计数（不可达时退出 3）")
 
     p = subs.add_parser("manifest", help="清单操作：show / validate / convert / merge")
     _add_common(p, True)
@@ -657,6 +711,159 @@ def cmd_supply(args: argparse.Namespace) -> int:
     return int(result.exit_code)
 
 
+def _tts_load_spec(path: Any) -> Any:
+    target = Path(str(path or "")).expanduser()
+    if not target.is_file():
+        raise FileNotFoundError("规格文件不存在: {0}".format(target))
+    return util.read_json(target)
+
+
+def cmd_tts_library(args: argparse.Namespace) -> int:
+    action = str(getattr(args, "action", "") or "")
+    if not action:
+        raise UsageError("tts-library 需要子命令（key/lookup/fetch/publish/verify/index/status）")
+    library = tts_library.TtsLibrary(getattr(args, "root", None))
+    try:
+        if action == "key":
+            result = tts_library.compute_key(_tts_load_spec(args.spec))
+            result["exit_code"] = util.EXIT_OK
+            _emit(args, result)
+            _say(args, "cache_key: {0}".format(result["cache_key"]))
+            _say(args, "asset_id: {0}".format(result["asset_id"]))
+            return util.EXIT_OK
+
+        if action == "lookup":
+            result = library.lookup(
+                _tts_load_spec(args.spec),
+                project=str(getattr(args, "project", "") or "") or None,
+                node=str(getattr(args, "node", "") or "") or None,
+                allow_candidate=bool(getattr(args, "allow_candidate", False)),
+                confirm=bool(getattr(args, "confirm", False)),
+                include_stale=bool(getattr(args, "include_stale", False)),
+            )
+            _emit(args, result)
+            if result.get("unreachable"):
+                _say(args, "tts-library: UNREACHABLE（{0}）".format(result.get("detail", "")))
+            elif result.get("asset"):
+                _say(
+                    args,
+                    "lookup: {0} {1}（{2}，{3}）".format(
+                        result["match"], result["asset_id"], result["reason"], result["asset"]["audio"]["sha256"][:16]
+                    ),
+                )
+            else:
+                candidates = result.get("candidates") or []
+                _say(args, "lookup: MISS（候选 {0} 个，不自动替代精确规格）".format(len(candidates)))
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        if action == "fetch":
+            asset_id = str(getattr(args, "asset", "") or "")
+            spec_path = str(getattr(args, "spec", "") or "")
+            if not asset_id:
+                if not spec_path:
+                    raise UsageError("fetch 需要 --asset 或 --spec")
+                asset_id = tts_library.compute_key(_tts_load_spec(spec_path))["asset_id"]
+            dest = str(getattr(args, "dest", "") or "")
+            if not dest:
+                task_dir = str(getattr(args, "task_dir", "") or "")
+                if not task_dir:
+                    raise UsageError("fetch 需要 --dest 或 --task-dir")
+                dest = os.path.join(task_dir, "assets", "tts", "original", asset_id)
+            result = library.fetch(
+                asset_id,
+                dest,
+                project=str(getattr(args, "project", "") or "") or None,
+                node=str(getattr(args, "node", "") or "") or None,
+                allow_candidate=bool(getattr(args, "allow_candidate", False)),
+                confirm=bool(getattr(args, "confirm", False)),
+            )
+            _emit(args, result)
+            if result.get("ok"):
+                _say(args, "fetch: {0} → {1}".format(result["asset_id"], result["dest"]["dir"]))
+            elif result.get("unreachable"):
+                _say(args, "tts-library: UNREACHABLE（{0}）".format(result.get("detail", "")))
+            else:
+                _say(args, "fetch: {0}（{1}）".format(result.get("reason"), result.get("asset_id")))
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        if action == "publish":
+            result = library.publish(
+                args.staging,
+                task_dir=args.task_dir,
+                project=str(getattr(args, "project", "") or "") or None,
+                node=str(getattr(args, "node", "") or "") or None,
+                lock_timeout=float(getattr(args, "lock_timeout", tts_library.DEFAULT_LOCK_TIMEOUT)),
+                allow_candidate=bool(getattr(args, "allow_candidate", False)),
+            )
+            _emit(args, result)
+            prefix = "publish" if result.get("ok") else "publish FAILED"
+            _say(
+                args,
+                "{0}: {1} created={2} version={3}（{4}）".format(
+                    prefix,
+                    result.get("asset_id") or "-",
+                    result.get("created"),
+                    result.get("version", "-"),
+                    result.get("reason"),
+                ),
+            )
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        if action == "verify":
+            result = library.verify(str(getattr(args, "asset", "") or "") or None)
+            _emit(args, result)
+            if result.get("unreachable"):
+                _say(args, "tts-library: UNREACHABLE（{0}）".format(result.get("detail", "")))
+            else:
+                _say(
+                    args,
+                    "verify: checked={0} corrupt={1} quarantined={2}".format(
+                        result.get("checked", 0), result.get("corrupt", 0), len(result.get("quarantined") or [])
+                    ),
+                )
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        if action == "index":
+            result = library.index()
+            _emit(args, result)
+            if result.get("unreachable"):
+                _say(args, "tts-library: UNREACHABLE（{0}）".format(result.get("detail", "")))
+            else:
+                _say(args, "index: {0} 条 → index.json".format(result.get("count", 0)))
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        if action == "status":
+            result = library.status()
+            _emit(args, result)
+            if not result.get("reachable"):
+                _say(args, "tts-library: UNREACHABLE（{0}）".format(result.get("detail", "")))
+            else:
+                counts = result.get("counts") or {}
+                _say(
+                    args,
+                    "tts-library: REACHABLE {0} 条 / {1}（active {2}，formal {3}）".format(
+                        counts.get("assets", 0),
+                        util.human_bytes(result.get("total_bytes", 0)),
+                        counts.get("active", 0),
+                        counts.get("formal", 0),
+                    ),
+                )
+            return int(result.get("exit_code") or util.EXIT_OK)
+
+        raise UsageError("未知 tts-library 子命令: {0!r}".format(action))
+    except tts_library.TtsUsageError as exc:
+        payload = {
+            "schema": "ark.tts-error.v1",
+            "ok": False,
+            "reason": "USAGE",
+            "detail": util.redact(exc),
+            "exit_code": util.EXIT_USAGE,
+        }
+        _emit(args, payload)
+        util.info("asset-tools: {0}".format(util.redact(exc)))
+        return util.EXIT_USAGE
+
+
 def cmd_manifest(args: argparse.Namespace) -> int:
     action = str(getattr(args, "action", "") or "")
     if action == "show":
@@ -754,6 +961,7 @@ _HANDLERS = {
     "cache": cmd_cache,
     "supply": cmd_supply,
     "manifest": cmd_manifest,
+    "tts-library": cmd_tts_library,
 }
 
 
@@ -772,6 +980,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
                 command,
                 "list/verify/prune" if command == "cache" else "show/validate/convert/merge",
             ))
+    if command == "tts-library" and not getattr(args, "action", ""):
+        raise UsageError("tts-library 需要子命令（key/lookup/fetch/publish/verify/index/status）")
     return int(handler(args))
 
 
