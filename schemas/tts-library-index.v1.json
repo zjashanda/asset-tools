@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ark.example/schemas/tts-library-index.v1.json",
+  "title": "ark.tts-library-index.v1",
+  "description": "1006 TTS 共享音频库索引。只登记受控相对路径与元数据，不存音频、不存敏感全文。",
+  "type": "object",
+  "required": ["schema", "generated_at", "library", "policy", "count", "assets"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "ark.tts-library-index.v1"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "北京时间展示格式 YYYY-MM-DD HH:MM:SS"
+    },
+    "library": {
+      "type": "object",
+      "required": ["kind", "relative_root"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": { "const": "1006" },
+        "relative_root": { "type": "string", "example": "audio/tts-library" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["rule", "responsible_repo"],
+      "additionalProperties": true,
+      "properties": {
+        "rule": { "const": "先查库、miss 才合成" },
+        "responsible_repo": { "const": "asset-tools" },
+        "library_root_kind": { "type": "string" },
+        "miss_owner": { "type": "string" }
+      }
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "索引条目数（同一 asset_id 的多个版本各算一条）"
+    },
+    "asset_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/entry" }
+    }
+  },
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "entry": {
+      "type": "object",
+      "required": ["asset_id", "dir", "version", "cache_key", "status", "quality", "audio", "path", "manifest_path"],
+      "additionalProperties": true,
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^tts-[0-9a-f]{16}$"
+        },
+        "dir": {
+          "type": "string",
+          "pattern": "^tts-[0-9a-f]{16}(?:-v[0-9]+)?$",
+          "description": "相对库根的目录名（受控位置）"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cache_key": {
+          "$ref": "#/definitions/sha256"
+        },
+        "status": {
+          "enum": ["active", "stale", "superseded"]
+        },
+        "quality": {
+          "enum": ["formal", "candidate", "evidence_gap"]
+        },
+        "shareable": { "type": "boolean" },
+        "visibility": {
+          "enum": ["public", "project", "restricted"]
+        },
+        "language": { "type": "string" },
+        "text_normalized_sha256": {
+          "type": ["string", "null"]
+        },
+        "voice_speaker": {
+          "type": ["string", "null"]
+        },
+        "voice_ref_sha256": {
+          "type": ["string", "null"]
+        },
+        "audio": {
+          "type": "object",
+          "required": ["sha256", "bytes", "path"],
+          "additionalProperties": true,
+          "properties": {
+            "sha256": { "$ref": "#/definitions/sha256" },
+            "bytes": { "type": "integer", "minimum": 0 },
+            "duration_seconds": { "type": ["number", "null"] },
+            "path": {
+              "type": "string",
+              "description": "相对库根的受控位置"
+            }
+          }
+        },
+        "path": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "audio_path": { "type": "string" },
+        "created_at": { "type": "string" },
+        "supersedes": { "type": ["string", "null"] },
+        "superseded_by": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
