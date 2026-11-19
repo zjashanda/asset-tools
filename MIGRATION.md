@@ -2,7 +2,7 @@
 
 > 本仓库只包含脚本、schema、测试与文档，不含任何凭据；迁移过程只读旧清单、只写新清单，不搬运任何密钥材料。
 
-本文件说明怎么把两份旧清单迁到 `ark.asset-manifest.v1`：ark-mesh 产出的 `artifact-manifest.json`，以及 venusahisiburner 的 `assets/manifest.json`。
+本文件说明怎么把两份旧清单迁到 `ark.asset-manifest.v1`：ark-mesh 产出的 `artifact-manifest.json`，以及 burner 的 `assets/manifest.json`。
 
 迁移是**加法**：旧文件原地不动，新文件另存一份。所以回滚成本几乎为零，见最后一节。
 
@@ -29,7 +29,7 @@ sha256sum /path/to/assets/manifest.json
 
 # 顺手备份一份，放在工作目录而不是仓库里
 cp /path/to/artifact-manifest.json ./artifact-manifest.json.orig
-cp /path/to/assets/manifest.json   ./venusahisiburner-manifest.json.orig
+cp /path/to/assets/manifest.json   ./burner-manifest.json.orig
 ```
 
 备份文件不要提交。仓库是公开的，备份里可能带内网路径。
@@ -41,14 +41,14 @@ cp /path/to/assets/manifest.json   ./venusahisiburner-manifest.json.orig
 | 旧清单 | `schema` 字段 |
 |---|---|
 | ark-mesh `artifact-manifest.json` | `ark-artifact-manifest.v1` |
-| venusahisiburner `assets/manifest.json` | `venusahisiburner-assets/v1` |
+| burner `assets/manifest.json` | `burner-assets/v1` |
 | 本仓 | `ark.asset-manifest.v1` |
 
 用只读的 `plan` 试一次，能出计划就说明识别成功：
 
 ```bash
 bash bin/asset-tools plan --manifest ./artifact-manifest.json.orig
-bash bin/asset-tools plan --manifest ./venusahisiburner-manifest.json.orig
+bash bin/asset-tools plan --manifest ./burner-manifest.json.orig
 ```
 
 `plan` 不改任何东西。输出里会逐个列出转换后的 id、缓存命中状态与来源顺序。这一步就能看出映射对不对：id 是不是你预期的、来源数量对不对、`filename` 有没有落到目录名上。
@@ -61,8 +61,8 @@ bash bin/asset-tools plan --manifest ./venusahisiburner-manifest.json.orig
 # ark-mesh 产物清单
 bash bin/asset-tools manifest show --manifest ./artifact-manifest.json.orig --json > ./assets.from-mesh.json
 
-# venusahisiburner 清单
-bash bin/asset-tools manifest show --manifest ./venusahisiburner-manifest.json.orig --json > ./assets.from-venus.json
+# burner 清单
+bash bin/asset-tools manifest show --manifest ./burner-manifest.json.orig --json > ./assets.from-venus.json
 ```
 
 检查生成结果：
@@ -110,8 +110,8 @@ bash bin/asset-tools verify --manifest ./assets.from-mesh.json
 # 新清单 → ark-mesh 认识的格式
 bash bin/asset-tools manifest convert --to ark-artifacts --manifest ./assets.from-mesh.json
 
-# 新清单 → venusahisiburner 认识的格式
-bash bin/asset-tools manifest convert --to venusahisiburner --manifest ./assets.from-venus.json
+# 新清单 → burner 认识的格式
+bash bin/asset-tools manifest convert --to burner --manifest ./assets.from-venus.json
 ```
 
 先 dry-run 看目标 schema 与条目数，确认条目数一致后再加 `--apply` 落盘。

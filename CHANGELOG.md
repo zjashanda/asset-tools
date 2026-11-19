@@ -2,11 +2,16 @@
 
 本文件记录 `asset-tools` 的重要变更。版本号遵循语义化版本。
 
+## v0.2.0 — 2026-11-19
+
+Changed: 清单转换目标正式更名为 `burner`——`manifest convert --to burner`、输出 schema `burner-assets/v1`、代码入口 `to_burner` / `from_burner`。
+`load_any` 改为按 `*-assets/v1` 尾部识别，更名前产出的清单仍可直接读入，不需要改动历史文件。
+
 ## v0.1.0 — 2026-11-10
 
 首个版本，把分散在各项目的资产取件脚本收成一条链：发现、清单、校验、缓存、供应。
 
-- manifest：新增 `ark.asset-manifest.v1` 与 `ark.supply-record.v1` 两份 schema；`load_any` 自动识别并转换 `ark-artifact-manifest.v1` 与 `venusahisiburner-assets/v1`；`merge` 按 id 对齐，同摘要合并来源，异摘要按 `discovered_at` 取舍并把被替换方记进 `provenance.note`。
+- manifest：新增 `ark.asset-manifest.v1` 与 `ark.supply-record.v1` 两份 schema；`load_any` 自动识别并转换 `ark-artifact-manifest.v1` 与 `burner-assets/v1`；`merge` 按 id 对齐，同摘要合并来源，异摘要按 `discovered_at` 取舍并把被替换方记进 `provenance.note`。
 - 缓存：内容寻址布局 `sha256/<前2>/<次2>/<sha256>/<filename>`，写入先落 `_incoming` 再原子 rename，校验 `OK`/`MISSING`/`CORRUPT`，坏副本移入 `_quarantine`，`prune` 默认 dry-run。
 - 适配器：`local`、`http`、`oss`、`node-storage`、`email`、`nas` 六个来源；`probe` 不抛异常，缺凭据或缺 CLI 一律 `BLOCKED:ADAPTER_UNAVAILABLE` 并只列变量名；`email` / `nas` 委托外部 CLI，`node-storage` 走 `sshpass -e` 并校验 `base_dir` 边界。
 - 供应：`supply_asset` 从缓存复制到目标目录，落位后重算 sha256，`--apply` 时写 `ark.supply-record.v1`，硬字段 `is_receipt: false` 与 `archive_owner: ark-archive` 明确本仓不产出归档回执。

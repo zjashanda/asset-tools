@@ -180,7 +180,7 @@
 |---|---|
 | `ark.asset-manifest.v1` | 原样读入 |
 | `ark-artifact-manifest.v1` | 转换为 assets，`kind="other"` |
-| `venusahisiburner-assets/v1` | 转换为 assets，`filename=file`，来源取 `oss.key` |
+| `burner-assets/v1` | 转换为 assets，`filename=file`，来源取 `oss.key` |
 
 ### 3.1 `ark-artifact-manifest.v1`（ark-mesh 产物清单）
 
@@ -202,7 +202,7 @@
 
 `id` 与 `filename` 的派生是转换约定，不是 schema 字段；转换后跑一次 `manifest validate` 并抽查 `plan` 输出即可确认这两列符合预期。
 
-### 3.2 `venusahisiburner-assets/v1`
+### 3.2 `burner-assets/v1`
 
 旧结构：`assets:[{id, kind, target_chip, version, file, bytes, sha256, oss{key,...}, install{material_rel,cache_rel}, provenance{source,note}}]`。
 
@@ -257,6 +257,6 @@
 
 - `ark-node-manifest.v1`（`ark-node` 的取件产物）：字段语义接近，但不互换。`ark-node` 描述「一次取件的尝试序列」，本仓描述「一份资产的来源集合与落位约定」。
 - `ark-artifact-manifest.v1`：只作输入，不再产出。需要给老消费者时用 `manifest convert --to ark-artifacts` 现场生成。
-- `venusahisiburner-assets/v1`：只作输入与导出目标，烧录侧继续用它，不会被本仓替换。
+- `burner-assets/v1`：只作输入与导出目标，烧录侧继续用它，不会被本仓替换。
 
 字段级说明到这里为止；写入路径与目录布局见 [cache.md](cache.md)，来源协议见 [adapters.md](adapters.md)。

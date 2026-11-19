@@ -13,7 +13,7 @@ from . import util
 
 SCHEMA = "ark.asset-manifest.v1"
 SCHEMA_ARK_MESH = "ark-artifact-manifest.v1"
-SCHEMA_VENUSAHISIBURNER = "venusahisiburner-assets/v1"
+SCHEMA_BURNER = "burner-assets/v1"
 
 KINDS = ("firmware", "tool", "test_material", "dataset", "other")
 STATUSES = ("verified", "unverified", "missing")
@@ -400,8 +400,8 @@ class AssetManifest:
             )
         return {"schema": SCHEMA_ARK_MESH, "artifacts": artifacts, "updated_at": self.generated_at}
 
-    def to_venusahisiburner(self, description: str = "") -> Dict[str, Any]:
-        """转出 venusahisiburner 的 ``venusahisiburner-assets/v1``。"""
+    def to_burner(self, description: str = "") -> Dict[str, Any]:
+        """转出 burner 的 ``burner-assets/v1``。"""
         assets: List[Dict[str, Any]] = []
         for asset in self.assets:
             oss_source = None
@@ -431,7 +431,7 @@ class AssetManifest:
                 },
             }
             assets.append(entry)
-        return {"schema": SCHEMA_VENUSAHISIBURNER, "description": description, "assets": assets}
+        return {"schema": SCHEMA_BURNER, "description": description, "assets": assets}
 
 
 # --------------------------------------------------------------------- 合并辅助
@@ -544,8 +544,8 @@ def from_ark_mesh(data: Dict[str, Any]) -> AssetManifest:
     return AssetManifest(assets=assets, generated_at=str(data.get("updated_at") or ""))
 
 
-def from_venusahisiburner(data: Dict[str, Any]) -> AssetManifest:
-    """把 venusahisiburner ``venusahisiburner-assets/v1`` 转成 canonical manifest。"""
+def from_burner(data: Dict[str, Any]) -> AssetManifest:
+    """把 burner ``burner-assets/v1`` 转成 canonical manifest。"""
     used: Dict[str, int] = {}
     assets: List[Asset] = []
     for raw in data.get("assets") or []:
@@ -581,7 +581,7 @@ def from_venusahisiburner(data: Dict[str, Any]) -> AssetManifest:
                 sources=sources,
                 install=install,
                 provenance={
-                    "origin": "venusahisiburner-assets/v1",
+                    "origin": "burner-assets/v1",
                     "note": str(provenance_in.get("note") or ""),
                     "source": str(provenance_in.get("source") or ""),
                     "discovered_at": str(raw.get("discovered_at") or data.get("updated_at") or ""),
@@ -603,8 +603,9 @@ def load_any(path: Any) -> AssetManifest:
         return AssetManifest.from_dict(data)
     if schema == SCHEMA_ARK_MESH or (not schema and "artifacts" in data):
         return from_ark_mesh(data)
-    if schema == SCHEMA_VENUSAHISIBURNER or "venusahisiburner" in schema:
-        return from_venusahisiburner(data)
+    if schema == SCHEMA_BURNER or schema.endswith("-assets/v1"):
+        # 按 ``*-assets/v1`` 尾部识别：正式名与更名前的历史清单都能读入
+        return from_burner(data)
     if schema.startswith("ark.artifact-manifest") or "artifact-manifest" in schema:
         return from_ark_mesh(data)
     if not schema and "assets" in data:

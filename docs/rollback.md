@@ -140,7 +140,7 @@ bash bin/asset-tools supply --manifest ./assets.json --asset pvm1005-firmware --
 
 ```bash
 rm -f ./artifact-manifest.json          # --to ark-artifacts 的产物
-rm -f ./assets.venusahisiburner.json    # --to venusahisiburner 的产物
+rm -f ./assets.burner.json    # --to burner 的产物
 ```
 
 输入清单原地未改，所以删掉输出不会造成任何信息丢失。

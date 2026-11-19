@@ -117,7 +117,7 @@ JSON 输出里对应 `"applied": false/true`，脚本据此判断，不用去 pa
 
 **为什么 manifest 不存来源凭据。** 凭据会轮换、会按机器不同，写进清单就变成了要同步的状态。清单只描述「去哪找」，不描述「怎么证明身份」。
 
-**为什么三种 schema 都认，但只产一种。** 输入侧要兼容历史（ark-mesh 与 venusahisiburner 的清单还在用），输出侧必须收敛，否则每个下游都在猜格式。`load_any` 负责收，`to_ark_artifacts` / `to_venusahisiburner` 负责按需放。
+**为什么三种 schema 都认，但只产一种。** 输入侧要兼容历史（ark-mesh 与 burner 的清单还在用），输出侧必须收敛，否则每个下游都在猜格式。`load_any` 负责收，`to_ark_artifacts` / `to_burner` 负责按需放。
 
 **为什么适配器必须有 `probe`。** 没有 `probe` 的适配器只能靠 `fetch` 试错，一次批量供应会打出几十条无意义的连接失败。`probe` 把「能不能用」和「有没有」分开，`status` 因此可以在一秒内回答「这台机器现在能连哪几个来源」。
 
