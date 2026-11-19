@@ -25,7 +25,7 @@ discover ──► manifest ──► cache（sha256 内容寻址）──► su
 ## 它不做什么（边界）
 
 - **不归档结果、不产出 receipt**。归档与回执归 `ark-archive`。供应记录里硬写 `"archive_owner": "ark-archive"` 与 `"is_receipt": false`，就是为了让下游一眼看出这不是归档凭证。
-- **不烧录、不跑测试**。烧录归 `venusahisiburner`，测试执行归 `lstest`。本仓只负责把正确的二进制放到正确的位置。
+- **不烧录、不跑测试**。烧录归 `burner`，测试执行归 `lstest`。本仓只负责把正确的二进制放到正确的位置。
 - **不实现邮件协议**。`email` 适配器委托 `qw-email-handle`，本仓不碰 IMAP/SMTP，也不读邮箱口令。
 - **不实现 NAS 协议**。`nas` 适配器委托 `fileball`，本仓不碰 FTP、WebDAV、FileStation，也不读 NAS 口令。
 - **不引第三方依赖**。只跑标准库（Python 3.8+），OSS 也不引 SDK。
@@ -36,7 +36,7 @@ discover ──► manifest ──► cache（sha256 内容寻址）──► su
 | 仓库 | 职责 | 与本仓的接口 |
 |---|---|---|
 | `ark-archive` | 结果归档、远端复核、生成 receipt | 本仓只管「把资产放到位」，不放 receipt；供应记录的 `archive_owner` / `is_receipt` 两个字段划清归属 |
-| `venusahisiburner` | 烧录执行 | 消费本仓的 manifest；`manifest convert --to venusahisiburner` 可直接还原成它认识的 `venusahisiburner-assets/v1` |
+| `burner` | 烧录执行 | 消费本仓的 manifest；`manifest convert --to burner` 可直接还原成它认识的 `burner-assets/v1` |
 | `lstest` | 测试执行 | 从缓存或 supply 落位目录取测试材料，只读 |
 | `qw-email-handle` | 企业邮箱附件 CLI | `email` 适配器委托它 `list --json` 与 `get <id> --out <DIR>` |
 | `fileball` | 内网 NAS / FileStation CLI | `nas` 适配器委托同样两条命令 |
@@ -140,7 +140,7 @@ bash bin/asset-tools register --manifest ./assets.json \
 | `fetch` | 拉取单个资产到缓存 | `--manifest`、`--asset` |
 | `cache` | `list` / `verify` / `prune` | `--keep-days`、`--apply` |
 | `supply` | 缓存→目标目录落位 + 记录 | `--manifest`、`--asset`、`--dest` |
-| `manifest` | `show` / `validate` / `convert --to ark-artifacts\|venusahisiburner` / `merge` | 清单路径用 `--manifest` 指定 |
+| `manifest` | `show` / `validate` / `convert --to ark-artifacts\|burner` / `merge` | 清单路径用 `--manifest` 指定 |
 
 输出有两种形态：人类可读表格（默认）与 `--json`。`--json` 时 stdout 只有 JSON，错误走 stderr，管道可以直接喂给 `jq`。
 
@@ -242,7 +242,7 @@ unset ARK_OSS_ACCESS_KEY_SECRET
 | [docs/rollback.md](docs/rollback.md) | 清缓存、回退 manifest、关闭适配器、删供应记录 |
 | [docs/runbook.md](docs/runbook.md) | 日常巡检、取件失败排查、凭据缺失排查 |
 | [docs/assets-not-in-git.md](docs/assets-not-in-git.md) | 不进 Git 的资产清单（pudCorntrol RAR 的路径/大小/SHA-256、厂商二进制与手册规则、NOAH-58 冻结仓库） |
-| [MIGRATION.md](MIGRATION.md) | 从 `artifact-manifest.json` 与 `venusahisiburner` 清单迁移 |
+| [MIGRATION.md](MIGRATION.md) | 从 `artifact-manifest.json` 与 `burner` 清单迁移 |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更记录 |
 
 ## 许可

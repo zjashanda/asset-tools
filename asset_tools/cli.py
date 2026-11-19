@@ -187,7 +187,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = manifest_subs.add_parser("convert", help="转换为旧 schema")
     _add_common(sub, True)
     sub.add_argument("--manifest", metavar="PATH", required=True)
-    sub.add_argument("--to", choices=("ark-artifacts", "venusahisiburner"), required=True)
+    sub.add_argument("--to", choices=("ark-artifacts", "burner"), required=True)
     sub.add_argument("--out", metavar="PATH", default="")
     sub = manifest_subs.add_parser("merge", help="合并两个清单")
     _add_common(sub, True)
@@ -904,7 +904,7 @@ def cmd_manifest(args: argparse.Namespace) -> int:
         if target == "ark-artifacts":
             document = manifest.to_ark_artifacts()
         else:
-            document = manifest.to_venusahisiburner(description="converted by asset-tools")
+            document = manifest.to_burner(description="converted by asset-tools")
         out = str(getattr(args, "out", "") or "")
         applied = bool(getattr(args, "apply", False))
         if out and applied:

@@ -13,7 +13,7 @@ SHA_B = "b" * 64
 
 CANONICAL = os.path.join(lib.FIXTURES_DIR, "manifest-canonical.json")
 ARK_MESH = os.path.join(lib.FIXTURES_DIR, "manifest-ark-mesh.json")
-VENUS = os.path.join(lib.FIXTURES_DIR, "manifest-venusahisiburner.json")
+BURNER_FIXTURE = os.path.join(lib.FIXTURES_DIR, "manifest-burner.json")
 
 
 def asset_dict(**overrides):
@@ -93,8 +93,17 @@ class LoadTest(unittest.TestCase):
         self.assertEqual(asset.sources[0]["node"], "storage-example")
         self.assertEqual(manifest.validate(), [])
 
-    def test_load_any_venusahisiburner(self):
-        manifest = mf.load_any(VENUS)
+    def test_load_any_retired_prefix_burner_manifest(self):
+        data = lib.read_json(BURNER_FIXTURE)
+        data["schema"] = "oldskill-assets/v1"
+        import tempfile
+        tmp = os.path.join(tempfile.mkdtemp(), "manifest-retired-prefix.json")
+        lib.write_json(tmp, data)
+        manifest = mf.load_any(tmp)
+        self.assertTrue(manifest.assets)
+
+    def test_load_any_burner(self):
+        manifest = mf.load_any(BURNER_FIXTURE)
         asset = manifest.assets[0]
         self.assertEqual(asset.filename, "sample-tool.txt")
         self.assertEqual(asset.sources[0]["type"], "oss")
@@ -244,9 +253,9 @@ class ConvertTest(unittest.TestCase):
         self.assertEqual(artifact["sha256"], lib.sha256_file(lib.FIRMWARE_FIXTURE))
         self.assertEqual(artifact["destination"], "fixture/sample-firmware.txt")
 
-    def test_to_venusahisiburner(self):
-        document = mf.AssetManifest.load(CANONICAL).to_venusahisiburner(description="demo")
-        self.assertEqual(document["schema"], mf.SCHEMA_VENUSAHISIBURNER)
+    def test_to_burner(self):
+        document = mf.AssetManifest.load(CANONICAL).to_burner(description="demo")
+        self.assertEqual(document["schema"], mf.SCHEMA_BURNER)
         self.assertEqual(document["description"], "demo")
         entry = document["assets"][0]
         self.assertEqual(entry["file"], "sample-firmware.txt")

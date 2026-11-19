@@ -382,14 +382,14 @@ class ManifestCliTest(CliBase):
         self.assertEqual(payload["schema"], "ark-artifact-manifest.v1")
         self.assertEqual(len(payload["document"]["artifacts"]), 1)
 
-    def test_manifest_convert_venusahisiburner(self):
+    def test_manifest_convert_burner(self):
         code, payload = call_json(
             self.args(
-                "manifest", "convert", "--manifest", self.manifest, "--to", "venusahisiburner", "--json"
+                "manifest", "convert", "--manifest", self.manifest, "--to", "burner", "--json"
             )
         )
         self.assertEqual(code, 0)
-        self.assertEqual(payload["document"]["schema"], "venusahisiburner-assets/v1")
+        self.assertEqual(payload["document"]["schema"], "burner-assets/v1")
 
     def test_manifest_convert_requires_to(self):
         code, _stdout = call(self.args("manifest", "convert", "--manifest", self.manifest, "--json"))
